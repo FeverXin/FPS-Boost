@@ -11,7 +11,7 @@ local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
 local AIMLOCK_HOLD_KEY = Enum.KeyCode.Button5  -- MOUSE5
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
 local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
-local PIXEL_HIT_CHANCE = 0.95  -- Chance of triggerbot hitting (1.0 = always)
+local PIXEL_HIT_CHANCE = 1.0  -- Always hit
 
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
@@ -148,7 +148,7 @@ local triggerbotEnabled = false
 local function triggerbot()
     while triggerbotEnabled do
         local target = getAimedTarget()
-        if target and math.random() <= PIXEL_HIT_CHANCE then
+        if target then
             mouse1press()
             wait(0.01)
             mouse1release()
