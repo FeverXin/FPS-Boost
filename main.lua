@@ -59,7 +59,7 @@ local function createESP(player)
 
         local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
         if onScreen then
-            nameTag.Position = Vector2.new(screenPos.X, screenPos.Y + 30)
+            nameTag.Position = Vector2.new(screenPos.X, screenPos.Y + 30)  -- Adjusted to be near the feet
             nameTag.Text = player.DisplayName
             nameTag.Visible = true
         else
@@ -152,4 +152,9 @@ UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = false
     end
+end)
+
+-- FOV Circle Update: Make the FOV circle follow the mouse
+RunService.RenderStepped:Connect(function()
+    fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
 end)
