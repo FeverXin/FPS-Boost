@@ -117,10 +117,10 @@ local function triggerbot()
         local target = getAimedTarget()
         if target then
             mouse1press()
-            wait(0.05)
+            wait(0.0001) -- 1/10th of a millisecond
             mouse1release()
         end
-        wait(0.01) -- Adjust for performance
+        wait(0.0001) -- Adjusted for ultra-fast reaction time
     end
 end
 
