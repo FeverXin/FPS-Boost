@@ -55,13 +55,14 @@ local selectedTriggerbotKey = nil
 local selectedAimlockKey = nil
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)  -- Default ESP color
 local FOV_COLOR = Color3.fromRGB(255, 255, 255)  -- Default FOV color
+local FOV_RADIUS = 150  -- Adjust the FOV size as needed
 
 -- Function to update text on button click
 local function updateKeybind(button, key)
     button.Text = "Selected: " .. key
 end
 
--- Color Picker Popup
+-- Create Color Picker (similar to Discord Role Color Picker)
 local function createColorPicker(button, colorType)
     local colorPicker = Instance.new("Frame")
     colorPicker.Size = UDim2.new(0, 300, 0, 300)
@@ -70,11 +71,17 @@ local function createColorPicker(button, colorType)
     colorPicker.Parent = ScreenGui
 
     -- Create color boxes for the picker
-    local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255)}
-    for i, color in ipairs(colors) do
+    local colors = {
+        Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255),
+        Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255),
+        Color3.fromRGB(255, 165, 0), Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0)
+    }
+    
+    local xPos, yPos = 0, 0
+    for _, color in ipairs(colors) do
         local colorBox = Instance.new("TextButton")
-        colorBox.Size = UDim2.new(0, 50, 0, 50)
-        colorBox.Position = UDim2.new(0, (i - 1) * 55, 0, 0)
+        colorBox.Size = UDim2.new(0, 40, 0, 40)
+        colorBox.Position = UDim2.new(0, xPos, 0, yPos)
         colorBox.BackgroundColor3 = color
         colorBox.Parent = colorPicker
 
@@ -89,6 +96,12 @@ local function createColorPicker(button, colorType)
             end
             colorPicker:Destroy()  -- Close the color picker
         end)
+
+        xPos = xPos + 45
+        if xPos > 255 then
+            xPos = 0
+            yPos = yPos + 45
+        end
     end
 end
 
@@ -150,11 +163,11 @@ ConfigureButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- FOV Circle
+-- FOV Circle Drawing
 local fovCircle = Drawing.new("Circle")
 fovCircle.Color = FOV_COLOR
 fovCircle.Thickness = 1.5
-fovCircle.Radius = 150  -- Adjust the FOV size as needed
+fovCircle.Radius = FOV_RADIUS
 fovCircle.Filled = false
 fovCircle.Transparency = 1
 fovCircle.Visible = true
