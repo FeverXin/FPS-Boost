@@ -12,8 +12,9 @@ local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
 local AIM_SMOOTHNESS = 0.1  -- Smoothness for aimlock
 local PIXEL_HIT_CHANCE = 1.0  -- Always hit
-local TRIGGERBOT_REACTION_TIME = 0.01  -- Extremely fast triggerbot reaction time
+local TRIGGERBOT_REACTION_TIME = 0.0000001  -- Extremely fast triggerbot reaction time (in seconds)
 local SILENT_AIM_FORCE = 100 -- The strength to curve the bullets toward the target
+local AIMLOCK_KEY = Enum.UserInputType.MouseButton5 -- Mouse5 (Forward Switch button) to hold for aimlock
 
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
@@ -153,7 +154,7 @@ local function aimlock(target)
     end
 end
 
--- Triggerbot - Extremely Fast Reaction
+-- Triggerbot - Extremely Fast Reaction (0.0000001 seconds)
 local triggerbotEnabled = false
 
 local function triggerbot()
@@ -161,10 +162,10 @@ local function triggerbot()
         local target = getAimedTarget()
         if target then
             mouse1press()
-            wait(0.001)  -- Extremely fast reaction time
+            wait(0.0000001)  -- Extremely fast reaction time
             mouse1release()
         end
-        wait(0.001) -- Reacts faster than the player can shoot, continuous check
+        wait(0.0000001) -- Reacts faster than the player can shoot, continuous check
     end
 end
 
@@ -205,5 +206,30 @@ RunService.RenderStepped:Connect(function()
     if target then
         silentAim(target)  -- Call silent aim for the target within the FOV circle
         aimlock(target)    -- Apply smooth aimlock to the target
+    end
+end)
+
+-- Aimlock activation with Mouse5 (Hold)
+local aimlockActive = false
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == AIMLOCK_KEY then
+        aimlockActive = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == AIMLOCK_KEY then
+        aimlockActive = false
+    end
+end)
+
+-- Call aimlock when Mouse5 is held
+RunService.RenderStepped:Connect(function()
+    if aimlockActive then
+        local target = getAimedTarget()
+        if target then
+            aimlock(target)  -- Apply smooth aimlock
+        end
     end
 end)
