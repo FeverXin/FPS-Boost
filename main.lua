@@ -1,3 +1,4 @@
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -31,6 +32,7 @@ local function createESP(player)
     local highlight = Instance.new("BoxHandleAdornment")
     highlight.Size = Vector3.new(4, 6, 0)
     highlight.Color3 = ESP_COLOR
+    highlight.Transparency = 1  -- Non-filled box
     highlight.Adornee = nil
     highlight.AlwaysOnTop = true
     highlight.ZIndex = 5
