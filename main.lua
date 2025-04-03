@@ -5,16 +5,33 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- Table to store ESP objects
+-- Settings
+local FOV_RADIUS = 150  -- Adjust circle size
+local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
+local AIMLOCK_HOLD_KEY = Enum.UserInputType.MouseButton4  -- MOUSE5
+local ESP_COLOR = Color3.fromRGB(255, 255, 255)
+local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
+local PIXEL_HIT_CHANCE = 0.95  -- Chance of triggerbot hitting (1.0 = always)
+
+-- FOV Circle
+local fovCircle = Drawing.new("Circle")
+fovCircle.Color = ESP_COLOR
+fovCircle.Thickness = 1.5
+fovCircle.Radius = FOV_RADIUS
+fovCircle.Filled = false
+fovCircle.Transparency = 1
+fovCircle.Visible = true
+
+-- ESP Storage
 local ESP_Boxes = {}
 
 -- Function to create ESP
 local function createESP(player)
-    if player == LocalPlayer then return end -- Don't ESP yourself
+    if player == LocalPlayer then return end
 
     local highlight = Instance.new("BoxHandleAdornment")
-    highlight.Size = Vector3.new(4, 6, 0) -- Box dimensions (adjust as needed)
-    highlight.Color3 = Color3.new(1, 1, 1) -- White color
+    highlight.Size = Vector3.new(4, 6, 0)
+    highlight.Color3 = ESP_COLOR
     highlight.Adornee = nil
     highlight.AlwaysOnTop = true
     highlight.ZIndex = 5
@@ -22,7 +39,7 @@ local function createESP(player)
 
     local nameTag = Drawing.new("Text")
     nameTag.Size = 18
-    nameTag.Color = Color3.new(1, 1, 1)
+    nameTag.Color = ESP_COLOR
     nameTag.Outline = true
     nameTag.Center = true
     nameTag.Visible = false
@@ -30,7 +47,7 @@ local function createESP(player)
     ESP_Boxes[player] = { Box = highlight, NameTag = nameTag }
 
     local function updateESP()
-        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or player.Character:FindFirstChild("Humanoid").Health <= 0 then
             highlight.Adornee = nil
             nameTag.Visible = false
             return
@@ -70,9 +87,7 @@ end
 Players.PlayerAdded:Connect(createESP)
 Players.PlayerRemoving:Connect(removeESP)
 
--- Triggerbot Setup
-local triggerbotEnabled = false
-
+-- Function to check if a player is visible
 local function isTargetVisible(target)
     local origin = Camera.CFrame.Position
     local targetPos = target.Position
@@ -83,25 +98,22 @@ local function isTargetVisible(target)
 
     local result = workspace:Raycast(origin, (targetPos - origin).unit * 500, raycastParams)
 
-    if result and result.Instance:IsDescendantOf(target.Parent) then
-        return true
-    else
-        return false
-    end
+    return result and result.Instance:IsDescendantOf(target.Parent)
 end
 
+-- Function to get the closest visible target within FOV
 local function getAimedTarget()
     local closestTarget = nil
     local shortestDistance = math.huge
 
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid").Health > 0 then
             local rootPart = player.Character.HumanoidRootPart
             local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
 
             if onScreen then
                 local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                if distance < shortestDistance and isTargetVisible(rootPart) then
+                if distance < FOV_RADIUS and distance < shortestDistance and isTargetVisible(rootPart) then
                     shortestDistance = distance
                     closestTarget = rootPart
                 end
@@ -112,27 +124,53 @@ local function getAimedTarget()
     return closestTarget
 end
 
+-- Smooth Aimlock Function
+local aimlockEnabled = false
+RunService.RenderStepped:Connect(function()
+    if aimlockEnabled then
+        local target = getAimedTarget()
+        if target then
+            local targetPos = target.Position
+            local newPos = Camera.CFrame.Position:Lerp(targetPos, AIM_SMOOTHNESS)
+            Camera.CFrame = CFrame.new(newPos, targetPos)
+        end
+    end
+end)
+
+-- FOV Circle Update
+RunService.RenderStepped:Connect(function()
+    fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+end)
+
+-- Triggerbot
+local triggerbotEnabled = false
+
 local function triggerbot()
     while triggerbotEnabled do
         local target = getAimedTarget()
-        if target then
+        if target and math.random() <= PIXEL_HIT_CHANCE then
             mouse1press()
-            wait(0.0001) -- 1/10th of a millisecond
+            wait(0.01)
             mouse1release()
         end
-        wait(0.0001) -- Adjusted for ultra-fast reaction time
+        wait(0.001) -- Reacts in 1/10 of a millisecond
     end
 end
 
+-- Input Events
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.E then
+    if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = true
         triggerbot()
+    elseif input.UserInputType == AIMLOCK_HOLD_KEY then
+        aimlockEnabled = true
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.E then
+    if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = false
+    elseif input.UserInputType == AIMLOCK_HOLD_KEY then
+        aimlockEnabled = false
     end
 end)
