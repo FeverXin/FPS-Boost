@@ -6,16 +6,6 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- Settings
-local FOV_RADIUS = 150  -- Adjust circle size
-local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
-local ESP_COLOR = Color3.fromRGB(255, 255, 255)
-local AIM_SMOOTHNESS = 0.1  -- Smoothness for aimlock
-local PIXEL_HIT_CHANCE = 1.0  -- Always hit
-local TRIGGERBOT_REACTION_TIME = 0.0000001  -- Extremely fast triggerbot reaction time (in seconds)
-local SILENT_AIM_FORCE = 100 -- The strength to curve the bullets toward the target
-local AIMLOCK_KEY = Enum.UserInputType.MouseButton5 -- Mouse5 (Forward Switch button) to hold for aimlock
-
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game.CoreGui
@@ -60,37 +50,52 @@ ConfigureButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 ConfigureButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ConfigureButton.Parent = ScreenGui
 
--- Variables for selected keybinds
+-- Variables for selected keybinds (No preset values)
 local selectedTriggerbotKey = nil
 local selectedAimlockKey = nil
 
 -- Function to update text on button click
 local function updateKeybind(button, key)
-    button.Text = button.Text:gsub("...", key.Name)
+    button.Text = button.Text:gsub("...", key)
 end
 
 -- Listen for key press for setting the keybinds
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
 
+    -- Update Triggerbot Key if selected
     if selectedTriggerbotKey then
-        selectedTriggerbotKey = input.KeyCode or input.UserInputType
-        updateKeybind(TriggerbotKeyBox, selectedTriggerbotKey)
-    elseif selectedAimlockKey then
-        selectedAimlockKey = input.KeyCode or input.UserInputType
-        updateKeybind(AimlockKeyBox, selectedAimlockKey)
+        if input.KeyCode then
+            selectedTriggerbotKey = input.KeyCode
+        elseif input.UserInputType then
+            selectedTriggerbotKey = input.UserInputType
+        end
+        updateKeybind(TriggerbotKeyBox, selectedTriggerbotKey.Name)
+        selectedTriggerbotKey = nil -- Reset after setting
+    end
+
+    -- Update Aimlock Key if selected
+    if selectedAimlockKey then
+        if input.KeyCode then
+            selectedAimlockKey = input.KeyCode
+        elseif input.UserInputType then
+            selectedAimlockKey = input.UserInputType
+        end
+        updateKeybind(AimlockKeyBox, selectedAimlockKey.Name)
+        selectedAimlockKey = nil -- Reset after setting
     end
 end)
 
--- Button click to set keybind
+-- Button click to set keybind for Triggerbot
 TriggerbotKeyBox.MouseButton1Click:Connect(function()
-    selectedTriggerbotKey = true
     TriggerbotKeyBox.Text = "Press a key for Triggerbot..."
+    selectedTriggerbotKey = true -- Indicate that Triggerbot keybind is being set
 end)
 
+-- Button click to set keybind for Aimlock
 AimlockKeyBox.MouseButton1Click:Connect(function()
-    selectedAimlockKey = true
     AimlockKeyBox.Text = "Press a key for Aimlock..."
+    selectedAimlockKey = true -- Indicate that Aimlock keybind is being set
 end)
 
 -- Update ESP and FOV colors
@@ -108,12 +113,10 @@ end)
 ConfigureButton.MouseButton1Click:Connect(function()
     -- Apply the settings
     print("Settings configured!")
-    -- You can add functionality to apply all changes here.
-    -- Example: 
+    -- Example of applying selected settings
     -- 1. Apply ESP color
     -- 2. Apply FOV color
-    -- 3. Set triggerbot and aimlock keybinds
-    -- 4. Add any other necessary configurations.
+    -- 3. Apply selected triggerbot and aimlock keybinds
 end)
 
 -- FOV Circle
@@ -192,4 +195,3 @@ Players.PlayerAdded:Connect(createESP)
 Players.PlayerRemoving:Connect(removeESP)
 
 -- Add additional functions here for Triggerbot, Aimlock, Silent Aim, etc.
-
