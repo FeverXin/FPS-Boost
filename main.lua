@@ -1,4 +1,4 @@
-local Players = game:GetService("Players") 
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
@@ -9,6 +9,7 @@ local Mouse = LocalPlayer:GetMouse()
 local FOV_RADIUS = 150  -- Adjust circle size
 local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
+local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
 local PIXEL_HIT_CHANCE = 1.0  -- Always hit
 
 -- FOV Circle
@@ -51,7 +52,7 @@ local function createESP(player)
             return
         end
 
-        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+        local rootPart = player.Character.HumanoidRootPart
         highlight.Adornee = rootPart
 
         local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
