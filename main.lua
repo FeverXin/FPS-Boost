@@ -191,11 +191,16 @@ UserInputService.InputBegan:Connect(function(input)
         -- Stop the script execution
         return
     end
+
+    -- Aimlock activation with Mouse5 (Hold)
+    if input.UserInputType == Enum.UserInputType.MouseButton5 then
+        aimlockActive = true
+    end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == TRIGGERBOT_HOLD_KEY then
-        triggerbotEnabled = false
+    if input.UserInputType == Enum.UserInputType.MouseButton5 then
+        aimlockActive = false
     end
 end)
 
@@ -209,22 +214,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Aimlock activation with Mouse5 (Hold)
+-- Call aimlock when Mouse5 is held
 local aimlockActive = false
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == AIMLOCK_KEY then
-        aimlockActive = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == AIMLOCK_KEY then
-        aimlockActive = false
-    end
-end)
-
--- Call aimlock when Mouse5 is held
 RunService.RenderStepped:Connect(function()
     if aimlockActive then
         local target = getAimedTarget()
