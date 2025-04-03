@@ -8,9 +8,7 @@ local Mouse = LocalPlayer:GetMouse()
 -- Settings
 local FOV_RADIUS = 150  -- Adjust circle size
 local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
-local AIMLOCK_HOLD_KEY = Enum.UserInputType.MouseButton4  -- Updated to MouseButton4
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
-local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
 local PIXEL_HIT_CHANCE = 1.0  -- Always hit
 
 -- FOV Circle
@@ -124,24 +122,6 @@ local function getAimedTarget()
     return closestTarget
 end
 
--- Smooth Aimlock Function
-local aimlockEnabled = false
-RunService.RenderStepped:Connect(function()
-    if aimlockEnabled then
-        local target = getAimedTarget()
-        if target then
-            local targetPos = target.Position
-            local newPos = Camera.CFrame.Position:Lerp(targetPos, AIM_SMOOTHNESS)
-            Camera.CFrame = CFrame.new(newPos, targetPos)
-        end
-    end
-end)
-
--- FOV Circle Update
-RunService.RenderStepped:Connect(function()
-    fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-end)
-
 -- Triggerbot
 local triggerbotEnabled = false
 
@@ -162,15 +142,11 @@ UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = true
         triggerbot()
-    elseif input.UserInputType == Enum.UserInputType.MouseButton4 then  -- Updated to MouseButton4
-        aimlockEnabled = true
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = false
-    elseif input.UserInputType == Enum.UserInputType.MouseButton4 then  -- Updated to MouseButton4
-        aimlockEnabled = false
     end
 end)
