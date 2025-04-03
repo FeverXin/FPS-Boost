@@ -53,10 +53,43 @@ ConfigureButton.Parent = ScreenGui
 -- Variables for selected keybinds (No preset values)
 local selectedTriggerbotKey = nil
 local selectedAimlockKey = nil
+local ESP_COLOR = Color3.fromRGB(255, 255, 255)  -- Default ESP color
+local FOV_COLOR = Color3.fromRGB(255, 255, 255)  -- Default FOV color
 
 -- Function to update text on button click
 local function updateKeybind(button, key)
-    button.Text = button.Text:gsub("...", key)
+    button.Text = "Selected: " .. key
+end
+
+-- Color Picker Popup
+local function createColorPicker(button, colorType)
+    local colorPicker = Instance.new("Frame")
+    colorPicker.Size = UDim2.new(0, 300, 0, 300)
+    colorPicker.Position = UDim2.new(0.5, -150, 0.5, -150)
+    colorPicker.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    colorPicker.Parent = ScreenGui
+
+    -- Create color boxes for the picker
+    local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255)}
+    for i, color in ipairs(colors) do
+        local colorBox = Instance.new("TextButton")
+        colorBox.Size = UDim2.new(0, 50, 0, 50)
+        colorBox.Position = UDim2.new(0, (i - 1) * 55, 0, 0)
+        colorBox.BackgroundColor3 = color
+        colorBox.Parent = colorPicker
+
+        -- When a color box is clicked, set the ESP or FOV color
+        colorBox.MouseButton1Click:Connect(function()
+            if colorType == "ESP" then
+                ESP_COLOR = color
+                ESPColorPicker.BackgroundColor3 = color
+            elseif colorType == "FOV" then
+                FOV_COLOR = color
+                FOVColorPicker.BackgroundColor3 = color
+            end
+            colorPicker:Destroy()  -- Close the color picker
+        end)
+    end
 end
 
 -- Listen for key press for setting the keybinds
@@ -66,22 +99,22 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     -- Update Triggerbot Key if selected
     if selectedTriggerbotKey then
         if input.KeyCode then
-            selectedTriggerbotKey = input.KeyCode
+            selectedTriggerbotKey = input.KeyCode.Name
         elseif input.UserInputType then
-            selectedTriggerbotKey = input.UserInputType
+            selectedTriggerbotKey = input.UserInputType.Name
         end
-        updateKeybind(TriggerbotKeyBox, selectedTriggerbotKey.Name)
+        updateKeybind(TriggerbotKeyBox, selectedTriggerbotKey)
         selectedTriggerbotKey = nil -- Reset after setting
     end
 
     -- Update Aimlock Key if selected
     if selectedAimlockKey then
         if input.KeyCode then
-            selectedAimlockKey = input.KeyCode
+            selectedAimlockKey = input.KeyCode.Name
         elseif input.UserInputType then
-            selectedAimlockKey = input.UserInputType
+            selectedAimlockKey = input.UserInputType.Name
         end
-        updateKeybind(AimlockKeyBox, selectedAimlockKey.Name)
+        updateKeybind(AimlockKeyBox, selectedAimlockKey)
         selectedAimlockKey = nil -- Reset after setting
     end
 end)
@@ -98,32 +131,30 @@ AimlockKeyBox.MouseButton1Click:Connect(function()
     selectedAimlockKey = true -- Indicate that Aimlock keybind is being set
 end)
 
--- Update ESP and FOV colors
+-- Button click to select ESP color
 ESPColorPicker.MouseButton1Click:Connect(function()
-    -- Add color picker code here
-    ESP_COLOR = Color3.fromRGB(255, 0, 0)  -- Example for red, replace with color picker logic
+    createColorPicker(ESPColorPicker, "ESP")
 end)
 
+-- Button click to select FOV color
 FOVColorPicker.MouseButton1Click:Connect(function()
-    -- Add color picker code here
-    fovCircle.Color = Color3.fromRGB(0, 0, 255)  -- Example for blue, replace with color picker logic
+    createColorPicker(FOVColorPicker, "FOV")
 end)
 
 -- Configure button to apply settings
 ConfigureButton.MouseButton1Click:Connect(function()
     -- Apply the settings
     print("Settings configured!")
-    -- Example of applying selected settings
-    -- 1. Apply ESP color
-    -- 2. Apply FOV color
-    -- 3. Apply selected triggerbot and aimlock keybinds
+    -- You can add actual logic here to apply these settings to the game
+    -- Close UI after configuring
+    ScreenGui:Destroy()
 end)
 
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
-fovCircle.Color = ESP_COLOR
+fovCircle.Color = FOV_COLOR
 fovCircle.Thickness = 1.5
-fovCircle.Radius = FOV_RADIUS
+fovCircle.Radius = 150  -- Adjust the FOV size as needed
 fovCircle.Filled = false
 fovCircle.Transparency = 1
 fovCircle.Visible = true
