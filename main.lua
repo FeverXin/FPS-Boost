@@ -8,7 +8,7 @@ local Mouse = LocalPlayer:GetMouse()
 -- Settings
 local FOV_RADIUS = 150  -- Adjust circle size
 local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
-local AIMLOCK_HOLD_KEY = Enum.UserInputType.MouseButton4  -- MOUSE5
+local AIMLOCK_HOLD_KEY = Enum.KeyCode.Button5  -- MOUSE5
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
 local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
 local PIXEL_HIT_CHANCE = 0.95  -- Chance of triggerbot hitting (1.0 = always)
@@ -162,7 +162,7 @@ UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = true
         triggerbot()
-    elseif input.UserInputType == AIMLOCK_HOLD_KEY then
+    elseif input.KeyCode == AIMLOCK_HOLD_KEY then
         aimlockEnabled = true
     end
 end)
@@ -170,7 +170,7 @@ end)
 UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = false
-    elseif input.UserInputType == AIMLOCK_HOLD_KEY then
+    elseif input.KeyCode == AIMLOCK_HOLD_KEY then
         aimlockEnabled = false
     end
 end)
