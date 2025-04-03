@@ -16,6 +16,106 @@ local TRIGGERBOT_REACTION_TIME = 0.0000001  -- Extremely fast triggerbot reactio
 local SILENT_AIM_FORCE = 100 -- The strength to curve the bullets toward the target
 local AIMLOCK_KEY = Enum.UserInputType.MouseButton5 -- Mouse5 (Forward Switch button) to hold for aimlock
 
+-- UI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+local ESPColorPicker = Instance.new("TextButton")
+ESPColorPicker.Size = UDim2.new(0, 200, 0, 50)
+ESPColorPicker.Position = UDim2.new(0.5, -100, 0.2, 0)
+ESPColorPicker.Text = "Select ESP Color"
+ESPColorPicker.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ESPColorPicker.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPColorPicker.Parent = ScreenGui
+
+local FOVColorPicker = Instance.new("TextButton")
+FOVColorPicker.Size = UDim2.new(0, 200, 0, 50)
+FOVColorPicker.Position = UDim2.new(0.5, -100, 0.3, 0)
+FOVColorPicker.Text = "Select FOV Color"
+FOVColorPicker.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+FOVColorPicker.TextColor3 = Color3.fromRGB(255, 255, 255)
+FOVColorPicker.Parent = ScreenGui
+
+local TriggerbotKeyBox = Instance.new("TextButton")
+TriggerbotKeyBox.Size = UDim2.new(0, 200, 0, 50)
+TriggerbotKeyBox.Position = UDim2.new(0.5, -100, 0.4, 0)
+TriggerbotKeyBox.Text = "Triggerbot Key: ..."
+TriggerbotKeyBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TriggerbotKeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TriggerbotKeyBox.Parent = ScreenGui
+
+local AimlockKeyBox = Instance.new("TextButton")
+AimlockKeyBox.Size = UDim2.new(0, 200, 0, 50)
+AimlockKeyBox.Position = UDim2.new(0.5, -100, 0.5, 0)
+AimlockKeyBox.Text = "Aimlock Key: ..."
+AimlockKeyBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+AimlockKeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimlockKeyBox.Parent = ScreenGui
+
+local ConfigureButton = Instance.new("TextButton")
+ConfigureButton.Size = UDim2.new(0, 200, 0, 50)
+ConfigureButton.Position = UDim2.new(0.5, -100, 0.6, 0)
+ConfigureButton.Text = "Configure"
+ConfigureButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ConfigureButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfigureButton.Parent = ScreenGui
+
+-- Variables for selected keybinds
+local selectedTriggerbotKey = nil
+local selectedAimlockKey = nil
+
+-- Function to update text on button click
+local function updateKeybind(button, key)
+    button.Text = button.Text:gsub("...", key.Name)
+end
+
+-- Listen for key press for setting the keybinds
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if selectedTriggerbotKey then
+        selectedTriggerbotKey = input.KeyCode or input.UserInputType
+        updateKeybind(TriggerbotKeyBox, selectedTriggerbotKey)
+    elseif selectedAimlockKey then
+        selectedAimlockKey = input.KeyCode or input.UserInputType
+        updateKeybind(AimlockKeyBox, selectedAimlockKey)
+    end
+end)
+
+-- Button click to set keybind
+TriggerbotKeyBox.MouseButton1Click:Connect(function()
+    selectedTriggerbotKey = true
+    TriggerbotKeyBox.Text = "Press a key for Triggerbot..."
+end)
+
+AimlockKeyBox.MouseButton1Click:Connect(function()
+    selectedAimlockKey = true
+    AimlockKeyBox.Text = "Press a key for Aimlock..."
+end)
+
+-- Update ESP and FOV colors
+ESPColorPicker.MouseButton1Click:Connect(function()
+    -- Add color picker code here
+    ESP_COLOR = Color3.fromRGB(255, 0, 0)  -- Example for red, replace with color picker logic
+end)
+
+FOVColorPicker.MouseButton1Click:Connect(function()
+    -- Add color picker code here
+    fovCircle.Color = Color3.fromRGB(0, 0, 255)  -- Example for blue, replace with color picker logic
+end)
+
+-- Configure button to apply settings
+ConfigureButton.MouseButton1Click:Connect(function()
+    -- Apply the settings
+    print("Settings configured!")
+    -- You can add functionality to apply all changes here.
+    -- Example: 
+    -- 1. Apply ESP color
+    -- 2. Apply FOV color
+    -- 3. Set triggerbot and aimlock keybinds
+    -- 4. Add any other necessary configurations.
+end)
+
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
 fovCircle.Color = ESP_COLOR
@@ -91,137 +191,5 @@ end
 Players.PlayerAdded:Connect(createESP)
 Players.PlayerRemoving:Connect(removeESP)
 
--- Function to check if a player is visible
-local function isTargetVisible(target)
-    local origin = Camera.CFrame.Position
-    local targetPos = target.Position
+-- Add additional functions here for Triggerbot, Aimlock, Silent Aim, etc.
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = { LocalPlayer.Character }
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-    local result = workspace:Raycast(origin, (targetPos - origin).unit * 500, raycastParams)
-
-    return result and result.Instance:IsDescendantOf(target.Parent)
-end
-
--- Function to get the closest visible target within FOV
-local function getAimedTarget()
-    local closestTarget = nil
-    local shortestDistance = math.huge
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid").Health > 0 then
-            local rootPart = player.Character.HumanoidRootPart
-            local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
-
-            if onScreen then
-                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                if distance < FOV_RADIUS and distance < shortestDistance and isTargetVisible(rootPart) then
-                    shortestDistance = distance
-                    closestTarget = rootPart
-                end
-            end
-        end
-    end
-
-    return closestTarget
-end
-
--- Silent Aim - Aggressive and Instant (Force-lock mechanism)
-local function silentAim(target)
-    if target then
-        local targetPos = target.Position
-        local direction = (targetPos - Camera.CFrame.Position).unit
-        local newPos = Camera.CFrame.Position + direction * SILENT_AIM_FORCE
-        Camera.CFrame = CFrame.new(newPos, targetPos)  -- Hard lock and curve toward target
-    end
-end
-
--- Third-Person Aimlock - Mouse Move based, smooth and locked on target
-local function aimlock(target)
-    if target then
-        local targetPos = target.Position
-        local mousePos = Vector2.new(Mouse.X, Mouse.Y)
-        
-        -- Create smooth aim movement towards the target
-        local targetScreenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
-        if onScreen then
-            local aimOffset = Vector2.new(targetScreenPos.X - mousePos.X, targetScreenPos.Y - mousePos.Y)
-            local smoothOffset = aimOffset * AIM_SMOOTHNESS
-            Mouse.Move:Fire(mousePos.X + smoothOffset.X, mousePos.Y + smoothOffset.Y)
-        end
-    end
-end
-
--- Triggerbot - Extremely Fast Reaction (0.0000001 seconds)
-local triggerbotEnabled = false
-
-local function triggerbot()
-    while triggerbotEnabled do
-        local target = getAimedTarget()
-        if target then
-            mouse1press()
-            wait(0.0000001)  -- Extremely fast reaction time
-            mouse1release()
-        end
-        wait(0.0000001) -- Reacts faster than the player can shoot, continuous check
-    end
-end
-
--- Input Events
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == TRIGGERBOT_HOLD_KEY then
-        triggerbotEnabled = true
-        triggerbot()
-    end
-
-    -- Kill switch: Press F9 to stop the script
-    if input.KeyCode == Enum.KeyCode.F9 then
-        -- Stop all processes and remove all elements
-        fovCircle.Visible = false
-        triggerbotEnabled = false
-        -- Disable silent aim and aimlock
-        silentAim = function() end
-        aimlock = function() end
-        -- Remove ESP
-        for _, player in pairs(Players:GetPlayers()) do
-            removeESP(player)
-        end
-        -- Stop the script execution
-        return
-    end
-
-    -- Aimlock activation with Mouse5 (Hold)
-    if input.UserInputType == Enum.UserInputType.MouseButton5 then
-        aimlockActive = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton5 then
-        aimlockActive = false
-    end
-end)
-
--- FOV Circle Update: Make the FOV circle follow the mouse
-RunService.RenderStepped:Connect(function()
-    fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-    local target = getAimedTarget()
-    if target then
-        silentAim(target)  -- Call silent aim for the target within the FOV circle
-        aimlock(target)    -- Apply smooth aimlock to the target
-    end
-end)
-
--- Call aimlock when Mouse5 is held
-local aimlockActive = false
-
-RunService.RenderStepped:Connect(function()
-    if aimlockActive then
-        local target = getAimedTarget()
-        if target then
-            aimlock(target)  -- Apply smooth aimlock
-        end
-    end
-end)
