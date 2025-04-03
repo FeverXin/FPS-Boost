@@ -10,9 +10,10 @@ local Mouse = LocalPlayer:GetMouse()
 local FOV_RADIUS = 150  -- Adjust circle size
 local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
-local AIM_SMOOTHNESS = 0.05  -- Aggressive, faster snapping for silent aim
+local AIM_SMOOTHNESS = 0.1  -- Smoothness for aimlock
 local PIXEL_HIT_CHANCE = 1.0  -- Always hit
 local TRIGGERBOT_REACTION_TIME = 0.01  -- Extremely fast triggerbot reaction time
+local SILENT_AIM_FORCE = 100 -- The strength to curve the bullets toward the target
 
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
@@ -126,13 +127,29 @@ local function getAimedTarget()
     return closestTarget
 end
 
--- Silent Aim - Aggressive and Instant
+-- Silent Aim - Aggressive and Instant (Force-lock mechanism)
 local function silentAim(target)
     if target then
         local targetPos = target.Position
-        -- Directly set camera position towards target with a high level of "snap"
-        local newPos = Camera.CFrame.Position:Lerp(targetPos, AIM_SMOOTHNESS)
-        Camera.CFrame = CFrame.new(newPos, targetPos)  -- Instant lock on target's position
+        local direction = (targetPos - Camera.CFrame.Position).unit
+        local newPos = Camera.CFrame.Position + direction * SILENT_AIM_FORCE
+        Camera.CFrame = CFrame.new(newPos, targetPos)  -- Hard lock and curve toward target
+    end
+end
+
+-- Third-Person Aimlock - Mouse Move based, smooth and locked on target
+local function aimlock(target)
+    if target then
+        local targetPos = target.Position
+        local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+        
+        -- Create smooth aim movement towards the target
+        local targetScreenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
+        if onScreen then
+            local aimOffset = Vector2.new(targetScreenPos.X - mousePos.X, targetScreenPos.Y - mousePos.Y)
+            local smoothOffset = aimOffset * AIM_SMOOTHNESS
+            Mouse.Move:Fire(mousePos.X + smoothOffset.X, mousePos.Y + smoothOffset.Y)
+        end
     end
 end
 
@@ -144,7 +161,7 @@ local function triggerbot()
         local target = getAimedTarget()
         if target then
             mouse1press()
-            wait(0.001)  -- Extremely fast reaction time, reacting in milliseconds
+            wait(0.001)  -- Extremely fast reaction time
             mouse1release()
         end
         wait(0.001) -- Reacts faster than the player can shoot, continuous check
@@ -160,9 +177,12 @@ UserInputService.InputBegan:Connect(function(input)
 
     -- Kill switch: Press F9 to stop the script
     if input.KeyCode == Enum.KeyCode.F9 then
-        -- Stop all processes and remove all the elements
+        -- Stop all processes and remove all elements
         fovCircle.Visible = false
         triggerbotEnabled = false
+        -- Disable silent aim and aimlock
+        silentAim = function() end
+        aimlock = function() end
         -- Remove ESP
         for _, player in pairs(Players:GetPlayers()) do
             removeESP(player)
@@ -184,5 +204,6 @@ RunService.RenderStepped:Connect(function()
     local target = getAimedTarget()
     if target then
         silentAim(target)  -- Call silent aim for the target within the FOV circle
+        aimlock(target)    -- Apply smooth aimlock to the target
     end
 end)
