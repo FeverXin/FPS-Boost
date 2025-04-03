@@ -10,8 +10,9 @@ local Mouse = LocalPlayer:GetMouse()
 local FOV_RADIUS = 150  -- Adjust circle size
 local TRIGGERBOT_HOLD_KEY = Enum.KeyCode.E
 local ESP_COLOR = Color3.fromRGB(255, 255, 255)
-local AIM_SMOOTHNESS = 0.15  -- Lower = smoother aimlock
+local AIM_SMOOTHNESS = 0.05  -- Aggressive, faster snapping for silent aim
 local PIXEL_HIT_CHANCE = 1.0  -- Always hit
+local TRIGGERBOT_REACTION_TIME = 0.01  -- Extremely fast triggerbot reaction time
 
 -- FOV Circle
 local fovCircle = Drawing.new("Circle")
@@ -125,7 +126,17 @@ local function getAimedTarget()
     return closestTarget
 end
 
--- Triggerbot
+-- Silent Aim - Aggressive and Instant
+local function silentAim(target)
+    if target then
+        local targetPos = target.Position
+        -- Directly set camera position towards target with a high level of "snap"
+        local newPos = Camera.CFrame.Position:Lerp(targetPos, AIM_SMOOTHNESS)
+        Camera.CFrame = CFrame.new(newPos, targetPos)  -- Instant lock on target's position
+    end
+end
+
+-- Triggerbot - Extremely Fast Reaction
 local triggerbotEnabled = false
 
 local function triggerbot()
@@ -133,10 +144,10 @@ local function triggerbot()
         local target = getAimedTarget()
         if target then
             mouse1press()
-            wait(0.01)
+            wait(0.001)  -- Extremely fast reaction time, reacting in milliseconds
             mouse1release()
         end
-        wait(0.001) -- Reacts in 1/10 of a millisecond
+        wait(0.001) -- Reacts faster than the player can shoot, continuous check
     end
 end
 
@@ -145,6 +156,19 @@ UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == TRIGGERBOT_HOLD_KEY then
         triggerbotEnabled = true
         triggerbot()
+    end
+
+    -- Kill switch: Press F9 to stop the script
+    if input.KeyCode == Enum.KeyCode.F9 then
+        -- Stop all processes and remove all the elements
+        fovCircle.Visible = false
+        triggerbotEnabled = false
+        -- Remove ESP
+        for _, player in pairs(Players:GetPlayers()) do
+            removeESP(player)
+        end
+        -- Stop the script execution
+        return
     end
 end)
 
@@ -157,4 +181,8 @@ end)
 -- FOV Circle Update: Make the FOV circle follow the mouse
 RunService.RenderStepped:Connect(function()
     fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+    local target = getAimedTarget()
+    if target then
+        silentAim(target)  -- Call silent aim for the target within the FOV circle
+    end
 end)
