@@ -60,7 +60,7 @@ MainTab:CreateSlider({
 	Name = "Reaction Time (ms)",
 	Range = {0.0000001, 1},
 	Increment = 0.0000001,
-	Suffix = "s",
+	Suffix = "ms",
 	CurrentValue = 0.01,
 	Callback = function(Value) end,
 })
