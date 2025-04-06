@@ -1,196 +1,153 @@
---[[
-    Custom Roblox Cheat UI
-    Theme: Black and Dark Magenta
-    Size: Horizontal Rectangle ~18x12 inch (scaled to screen)
-    Includes: All toggles, dropdowns, sliders, and keybind handlers
---]]
+-- Custom UI Setup for your Roblox Cheat
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
+local UIS = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 
+-- Custom UI Elements
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CheatUI"
-ScreenGui.Parent = game:GetService("CoreGui")
-
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0.6, 0, 0.6, 0)
-MainFrame.Position = UDim2.new(0.2, 0, 0.2, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.BorderSizePixel = 0
+local TriggerBotToggle = Instance.new("TextButton")
+local AimlockToggle = Instance.new("TextButton")
+local FOVCircleSizeSlider = Instance.new("TextBox")
+local ReactionTimeSlider = Instance.new("TextBox")
+local KeybindSelector = Instance.new("TextButton")
+local AlwaysHitToggle = Instance.new("TextButton")
+
+-- Setup Main UI Frame
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "CustomCheatUI"  -- This can be your watermark or brand name
 MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 800, 0, 600)
+MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
+MainFrame.BackgroundColor3 = Color3.fromRGB(32, 0, 64)
+MainFrame.BorderSizePixel = 0
+MainFrame.Name = "MainFrame"  -- Custom name for your branding
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.FillDirection = Enum.FillDirection.Vertical
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 6)
-UIListLayout.Parent = MainFrame
+-- Custom UI Elements (TextButtons and Sliders)
 
-local function createSection(title)
-    local section = Instance.new("Frame")
-    section.Size = UDim2.new(1, 0, 0, 30)
-    section.BackgroundColor3 = Color3.fromRGB(25, 0, 40)
+-- TriggerBot Toggle
+TriggerBotToggle.Parent = MainFrame
+TriggerBotToggle.Size = UDim2.new(0, 200, 0, 50)
+TriggerBotToggle.Position = UDim2.new(0.1, 0, 0.1, 0)
+TriggerBotToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+TriggerBotToggle.Text = "Triggerbot"
+TriggerBotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TriggerBotToggle.TextSize = 20
 
-    local label = Instance.new("TextLabel")
-    label.Text = title
-    label.Font = Enum.Font.SourceSansBold
-    label.TextSize = 18
-    label.TextColor3 = Color3.fromRGB(200, 100, 255)
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Parent = section
+-- Aimlock Toggle
+AimlockToggle.Parent = MainFrame
+AimlockToggle.Size = UDim2.new(0, 200, 0, 50)
+AimlockToggle.Position = UDim2.new(0.1, 0, 0.2, 0)
+AimlockToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+AimlockToggle.Text = "Aimlock"
+AimlockToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimlockToggle.TextSize = 20
 
-    return section
-end
+-- FOV Circle Size Slider (TextBox for input)
+FOVCircleSizeSlider.Parent = MainFrame
+FOVCircleSizeSlider.Size = UDim2.new(0, 200, 0, 50)
+FOVCircleSizeSlider.Position = UDim2.new(0.1, 0, 0.3, 0)
+FOVCircleSizeSlider.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+FOVCircleSizeSlider.Text = "FOV Circle Size"
+FOVCircleSizeSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+FOVCircleSizeSlider.TextSize = 20
 
-local function createToggle(name)
-    local toggle = Instance.new("Frame")
-    toggle.Size = UDim2.new(1, 0, 0, 30)
-    toggle.BackgroundTransparency = 1
+-- Reaction Time Slider (TextBox for input)
+ReactionTimeSlider.Parent = MainFrame
+ReactionTimeSlider.Size = UDim2.new(0, 200, 0, 50)
+ReactionTimeSlider.Position = UDim2.new(0.1, 0, 0.4, 0)
+ReactionTimeSlider.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+ReactionTimeSlider.Text = "Reaction Time (ms)"
+ReactionTimeSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReactionTimeSlider.TextSize = 20
 
-    local label = Instance.new("TextLabel")
-    label.Text = name
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Size = UDim2.new(0.7, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Parent = toggle
+-- Keybind Selector
+KeybindSelector.Parent = MainFrame
+KeybindSelector.Size = UDim2.new(0, 200, 0, 50)
+KeybindSelector.Position = UDim2.new(0.1, 0, 0.5, 0)
+KeybindSelector.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+KeybindSelector.Text = "Select Keybind"
+KeybindSelector.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindSelector.TextSize = 20
 
-    local switch = Instance.new("TextButton")
-    switch.Size = UDim2.new(0.3, 0, 0.8, 0)
-    switch.Position = UDim2.new(0.7, 0, 0.1, 0)
-    switch.BackgroundColor3 = Color3.fromRGB(50, 0, 80)
-    switch.Text = "OFF"
-    switch.TextColor3 = Color3.fromRGB(255, 255, 255)
-    switch.Font = Enum.Font.SourceSansBold
-    switch.TextSize = 14
-    switch.Parent = toggle
+-- Always Hit Toggle
+AlwaysHitToggle.Parent = MainFrame
+AlwaysHitToggle.Size = UDim2.new(0, 200, 0, 50)
+AlwaysHitToggle.Position = UDim2.new(0.1, 0, 0.6, 0)
+AlwaysHitToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 240)
+AlwaysHitToggle.Text = "Always Hit"
+AlwaysHitToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AlwaysHitToggle.TextSize = 20
 
-    switch.MouseButton1Click:Connect(function()
-        if switch.Text == "OFF" then
-            switch.Text = "ON"
-            switch.BackgroundColor3 = Color3.fromRGB(100, 0, 150)
-        else
-            switch.Text = "OFF"
-            switch.BackgroundColor3 = Color3.fromRGB(50, 0, 80)
-        end
-    end)
+-- Toggle States
+local triggerBotEnabled = false
+local aimlockEnabled = false
+local alwaysHitEnabled = false
 
-    return toggle
-end
-
-local function createSlider(name, min, max, step)
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(1, 0, 0, 40)
-    sliderFrame.BackgroundTransparency = 1
-
-    local label = Instance.new("TextLabel")
-    label.Text = name
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Size = UDim2.new(1, 0, 0.5, 0)
-    label.BackgroundTransparency = 1
-    label.Parent = sliderFrame
-
-    local slider = Instance.new("TextBox")
-    slider.Size = UDim2.new(1, 0, 0.5, 0)
-    slider.Position = UDim2.new(0, 0, 0.5, 0)
-    slider.BackgroundColor3 = Color3.fromRGB(40, 0, 60)
-    slider.Text = tostring(min)
-    slider.TextColor3 = Color3.fromRGB(255, 255, 255)
-    slider.Font = Enum.Font.SourceSans
-    slider.TextSize = 14
-    slider.ClearTextOnFocus = true
-    slider.Parent = sliderFrame
-
-    return sliderFrame
-end
-
-local function createKeybind(name)
-    local bindFrame = Instance.new("Frame")
-    bindFrame.Size = UDim2.new(1, 0, 0, 30)
-    bindFrame.BackgroundTransparency = 1
-
-    local label = Instance.new("TextLabel")
-    label.Text = name
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Size = UDim2.new(0.6, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Parent = bindFrame
-
-    local keyButton = Instance.new("TextButton")
-    keyButton.Size = UDim2.new(0.4, 0, 1, 0)
-    keyButton.Position = UDim2.new(0.6, 0, 0, 0)
-    keyButton.BackgroundColor3 = Color3.fromRGB(40, 0, 70)
-    keyButton.Text = "Set Key"
-    keyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    keyButton.Font = Enum.Font.SourceSansBold
-    keyButton.TextSize = 14
-    keyButton.Parent = bindFrame
-
-    keyButton.MouseButton1Click:Connect(function()
-        keyButton.Text = "Press a Key..."
-        local conn
-        conn = UserInputService.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                keyButton.Text = "Mouse1"
-            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
-                keyButton.Text = "Mouse2"
-            elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
-                keyButton.Text = "Mouse3"
-            elseif input.UserInputType == Enum.UserInputType.Keyboard then
-                keyButton.Text = input.KeyCode.Name
-            end
-            conn:Disconnect()
-        end)
-    end)
-
-    return bindFrame
-end
-
--- Sections
-MainFrame:AddChild(createSection("Aimlock"))
-MainFrame:AddChild(createToggle("Enable Aimlock"))
-MainFrame:AddChild(createKeybind("Aimlock Key"))
-
-MainFrame:AddChild(createSection("Triggerbot"))
-MainFrame:AddChild(createToggle("Enable Triggerbot"))
-MainFrame:AddChild(createSlider("Reaction Time (ms)", 0.0000001, 1, 0.0000001))
-MainFrame:AddChild(createToggle("Wall Check"))
-MainFrame:AddChild(createKeybind("Trigger Key"))
-
-MainFrame:AddChild(createSection("Kill All"))
-MainFrame:AddChild(createToggle("Kill All"))
-MainFrame:AddChild(createToggle("Loop Kill All"))
-
-MainFrame:AddChild(createSection("Always Hit"))
-MainFrame:AddChild(createToggle("Enable Always Hit"))
-MainFrame:AddChild(createSlider("FOV Circle Radius", 10, 1000, 5))
-MainFrame:AddChild(createToggle("Auto Trigger"))
-MainFrame:AddChild(createSlider("Auto Trigger Reaction (ms)", 0.0000001, 1, 0.0000001))
-
-MainFrame:AddChild(createSection("Utility Settings"))
-MainFrame:AddChild(createToggle("Delete Developer Logs"))
-MainFrame:AddChild(createToggle("Kick Player"))
-MainFrame:AddChild(createToggle("Bullet Teleportation"))
-MainFrame:AddChild(createToggle("Desync Movement"))
-MainFrame:AddChild(createToggle("Auto Dodge"))
-MainFrame:AddChild(createToggle("Target Priority System"))
-MainFrame:AddChild(createToggle("Player Alert"))
-MainFrame:AddChild(createToggle("Rapid Fire"))
-MainFrame:AddChild(createToggle("Weapon Cooldown Remover"))
-MainFrame:AddChild(createToggle("Custom Hit Sound"))
-MainFrame:AddChild(createToggle("Name ESP Enhancer"))
-
--- Tab Toggle Bind (TAB)
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.Tab then
-        MainFrame.Visible = not MainFrame.Visible
-    end
+-- Setting Up UI Interactions
+TriggerBotToggle.MouseButton1Click:Connect(function()
+    triggerBotEnabled = not triggerBotEnabled
+    TriggerBotToggle.Text = triggerBotEnabled and "Triggerbot Enabled" or "Triggerbot Disabled"
 end)
+
+AimlockToggle.MouseButton1Click:Connect(function()
+    aimlockEnabled = not aimlockEnabled
+    AimlockToggle.Text = aimlockEnabled and "Aimlock Enabled" or "Aimlock Disabled"
+end)
+
+AlwaysHitToggle.MouseButton1Click:Connect(function()
+    alwaysHitEnabled = not alwaysHitEnabled
+    AlwaysHitToggle.Text = alwaysHitEnabled and "Always Hit Enabled" or "Always Hit Disabled"
+end)
+
+-- Keybind Selector (Choose Keybind)
+KeybindSelector.MouseButton1Click:Connect(function()
+    -- Logic for Keybind selection (for example, Mouse1, Mouse2, etc.)
+    -- This can be expanded based on user input for keybindings
+end)
+
+-- FOV Circle Size and Triggerbot Reaction Time
+FOVCircleSizeSlider.FocusLost:Connect(function()
+    local fovSize = tonumber(FOVCircleSizeSlider.Text)
+    -- Adjust FOV circle size logic here
+end)
+
+ReactionTimeSlider.FocusLost:Connect(function()
+    local reactionTime = tonumber(ReactionTimeSlider.Text)
+    -- Adjust reaction time logic here for Triggerbot
+end)
+
+-- Triggerbot Functionality
+local function triggerbot()
+    -- Check for player in crosshair or FOV
+    -- Check visibility (no walls)
+    -- Shoot logic with reaction time and FOV adjustments
+end
+
+-- Aimlock Functionality
+local function aimlock()
+    -- Aimlock logic (smoothness, targetting)
+    -- Lock onto closest target and move to their head/body
+end
+
+-- Always Hit Functionality
+local function alwaysHit()
+    -- Check if player is within FOV
+    -- Automatically shoot if visible
+end
+
+-- Main Logic Loop
+while true do
+    if triggerBotEnabled then
+        triggerbot()
+    end
+    if aimlockEnabled then
+        aimlock()
+    end
+    if alwaysHitEnabled then
+        alwaysHit()
+    end
+    wait(0.1)  -- This is adjustable for responsiveness
+end
