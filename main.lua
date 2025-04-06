@@ -1,220 +1,179 @@
---[[ 
-⚠️ You must be using an executor that supports UI libraries and full-featured Lua scripts
-This UI is built using Rayfield Library (or similar), so make sure to install it if not using Synapse X, Fluxus, etc.
-]]
+-- Create a new ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MVSD_Pro_UI"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Load UI Library
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
--- Main Window
-local Window = Rayfield:CreateWindow({
-	Name = "MVSD Pro UI",
-	LoadingTitle = "Loading...",
-	LoadingSubtitle = "by Polluted",
-	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "MVSD_UI",
-		FileName = "Settings"
-	},
-        Discord = {
-        	Enabled = false,
-        	Invite = "", 
-        	RememberJoins = true
-    	},
-	KeySystem = false
-})
-
--- Tab
-local MainTab = Window:CreateTab("Main", 4483362458)
-
--- SECTION: FUNCTION TO HOLD SETTINGS
-local function CreateSetting(tab, name, description, callback)
-	return tab:CreateToggle({
-		Name = name,
-		CurrentValue = false,
-		Flag = name,
-		Callback = callback
-	})
+-- Helper function to create a button
+local function createButton(parent, name, position, size, text, callback)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = size
+    button.Position = position
+    button.Text = text
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.TextColor3 = Color3.fromRGB(255, 0, 255)
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 14
+    button.Parent = parent
+    
+    button.MouseButton1Click:Connect(callback)
+    return button
 end
 
--- AIMLOCK
-local AimlockToggle = CreateSetting(MainTab, "Aimlock", "Lock onto players", function(Value) end)
-MainTab:CreateInput({
-	Name = "Aimlock Keybind",
-	PlaceholderText = "Press Key...",
-	RemoveTextAfterFocusLost = true,
-	Callback = function(Key) end
-})
-MainTab:CreateSlider({
-	Name = "Aimlock Smoothness",
-	Range = {0, 100},
-	Increment = 1,
-	Suffix = "%",
-	CurrentValue = 20,
-	Callback = function(Value) end,
-})
+-- Helper function to create a toggle switch
+local function createToggle(parent, name, position, text, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(0, 200, 0, 40)
+    toggleFrame.Position = position
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    toggleFrame.Parent = parent
+    
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Text = text
+    toggleLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    toggleLabel.TextColor3 = Color3.fromRGB(255, 0, 255)
+    toggleLabel.Font = Enum.Font.SourceSans
+    toggleLabel.TextSize = 14
+    toggleLabel.Parent = toggleFrame
+    
+    local toggleSwitch = Instance.new("TextButton")
+    toggleSwitch.Size = UDim2.new(0, 50, 0, 20)
+    toggleSwitch.Position = UDim2.new(0.8, 0, 0.3, 0)
+    toggleSwitch.Text = "OFF"
+    toggleSwitch.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
+    toggleSwitch.Parent = toggleFrame
+    
+    toggleSwitch.MouseButton1Click:Connect(function()
+        if toggleSwitch.Text == "OFF" then
+            toggleSwitch.Text = "ON"
+            callback(true)
+        else
+            toggleSwitch.Text = "OFF"
+            callback(false)
+        end
+    end)
+    
+    return toggleFrame
+end
 
--- TRIGGERBOT
-local TriggerbotToggle = CreateSetting(MainTab, "Triggerbot", "Auto-shoots visible targets", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Reaction Time (ms)",
-	Range = {0.0000001, 1},
-	Increment = 0.0000001,
-	Suffix = "ms",
-	CurrentValue = 0.01,
-	Callback = function(Value) end,
-})
-MainTab:CreateDropdown({
-	Name = "Hit Pixels",
-	Options = {"Head", "Torso", "Limbs"},
-	CurrentOption = "Head",
-	Callback = function(Value) end,
-})
-CreateSetting(MainTab, "Wall Check", "Only shoot when player is exposed", function(Value) end)
+-- Helper function to create a slider
+local function createSlider(parent, name, position, min, max, default, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(0, 200, 0, 40)
+    sliderFrame.Position = position
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    sliderFrame.Parent = parent
+    
+    local sliderLabel = Instance.new("TextLabel")
+    sliderLabel.Text = name
+    sliderLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    sliderLabel.TextColor3 = Color3.fromRGB(255, 0, 255)
+    sliderLabel.Font = Enum.Font.SourceSans
+    sliderLabel.TextSize = 14
+    sliderLabel.Parent = sliderFrame
+    
+    local slider = Instance.new("TextButton")
+    slider.Size = UDim2.new(0, 150, 0, 20)
+    slider.Position = UDim2.new(0, 25, 0.6, 0)
+    slider.Text = ""
+    slider.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
+    slider.Parent = sliderFrame
+    
+    local sliderIndicator = Instance.new("Frame")
+    sliderIndicator.Size = UDim2.new(0, 0, 1, 0)
+    sliderIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    sliderIndicator.Parent = slider
+    
+    slider.MouseButton1Down:Connect(function()
+        local mouse = game.Players.LocalPlayer:GetMouse()
+        local dragging = true
+        while dragging do
+            local mouseX = math.clamp(mouse.X - slider.Position.X.Offset, 0, slider.Size.X.Offset)
+            sliderIndicator.Size = UDim2.new(mouseX / slider.Size.X.Offset, 0, 1, 0)
+            local value = math.floor((mouseX / slider.Size.X.Offset) * (max - min) + min)
+            callback(value)
+            wait(0.01)
+        end
+    end)
+    
+    slider.MouseButton1Up:Connect(function()
+        dragging = false
+    end)
+    
+    return sliderFrame
+end
 
--- SILENT AIM
-CreateSetting(MainTab, "Silent Aim", "Hits targets silently", function(Value) end)
+-- Helper function to create an input box
+local function createInput(parent, name, position, placeholder, callback)
+    local inputFrame = Instance.new("Frame")
+    inputFrame.Size = UDim2.new(0, 200, 0, 40)
+    inputFrame.Position = position
+    inputFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    inputFrame.Parent = parent
+    
+    local inputLabel = Instance.new("TextLabel")
+    inputLabel.Text = name
+    inputLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    inputLabel.TextColor3 = Color3.fromRGB(255, 0, 255)
+    inputLabel.Font = Enum.Font.SourceSans
+    inputLabel.TextSize = 14
+    inputLabel.Parent = inputFrame
+    
+    local inputBox = Instance.new("TextBox")
+    inputBox.PlaceholderText = placeholder
+    inputBox.Size = UDim2.new(1, 0, 0.7, 0)
+    inputBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    inputBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    inputBox.Parent = inputFrame
+    
+    inputBox.FocusLost:Connect(function()
+        callback(inputBox.Text)
+    end)
+    
+    return inputFrame
+end
 
--- ALWAYS HIT
-local AlwaysHitToggle = CreateSetting(MainTab, "Always Hit", "Auto shoot visible targets in FOV", function(Value) end)
-MainTab:CreateSlider({
-	Name = "FOV Circle Radius",
-	Range = {10, 300},
-	Increment = 1,
-	Suffix = "px",
-	CurrentValue = 100,
-	Callback = function(Value) end,
-})
-CreateSetting(MainTab, "Auto Trigger", "Shoots automatically", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Reaction Time (ms)",
-	Range = {0.0000001, 1},
-	Increment = 0.0000001,
-	Suffix = "s",
-	CurrentValue = 0.01,
-	Callback = function(Value) end,
-})
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 600)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.Parent = screenGui
 
--- ESP
-CreateSetting(MainTab, "ESP", "Visual player boxes", function(Value) end)
-MainTab:CreateColorPicker({
-	Name = "ESP Color",
-	Color = Color3.fromRGB(255, 0, 255),
-	Callback = function(Color) end
-})
-
--- FOV Circle
-CreateSetting(MainTab, "Show FOV", "Show visible FOV circle", function(Value) end)
-MainTab:CreateColorPicker({
-	Name = "FOV Color",
-	Color = Color3.fromRGB(255, 0, 255),
-	Callback = function(Color) end
-})
-
--- HBE / SMART HBE
-CreateSetting(MainTab, "Smart HBE", "Hits visible exposed enemies", function(Value) end)
-CreateSetting(MainTab, "Visualize Smart HBE", "Show Smart HBE range", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Hitbox Size",
-	Range = {1, 10},
-	Increment = 0.1,
-	CurrentValue = 1.5,
-	Callback = function(Value) end,
-})
-
--- KILL ALL / LOOP KILL ALL
-CreateSetting(MainTab, "Kill All (MVSD)", "Kill all enemies instantly", function(Value)
-	-- placeholder for MVSD game logic
+-- Add buttons, sliders, and toggles
+createButton(mainFrame, "Kill All", UDim2.new(0, 50, 0, 50), UDim2.new(0, 300, 0, 40), "Kill All", function()
+    -- placeholder for Kill All logic
 end)
-CreateSetting(MainTab, "Loop Kill All (MVSD)", "Spam kill all 50 bullets/sec", function(Value)
-	-- placeholder for MVSD game logic
+
+createButton(mainFrame, "Loop Kill All", UDim2.new(0, 50, 0, 100), UDim2.new(0, 300, 0, 40), "Loop Kill All", function()
+    -- placeholder for Loop Kill All logic
 end)
 
--- DELETE DEV LOGS
-CreateSetting(MainTab, "Delete Developer Logs", "Clear F9 console", function(Value)
-	if Value then
-		local StarterGui = game:GetService("StarterGui")
-		StarterGui:SetCore("DevConsoleVisible", false)
-		wait(0.1)
-		StarterGui:SetCore("DevConsoleVisible", true)
-	end
+createToggle(mainFrame, "Aimlock", UDim2.new(0, 50, 0, 150), "Aimlock", function(Value)
+    -- placeholder for Aimlock toggle logic
 end)
 
--- KICK PLAYER
-CreateSetting(MainTab, "Kick Player", "Kick specified player", function(Value) end)
-MainTab:CreateInput({
-	Name = "Enter Username to Kick",
-	PlaceholderText = "username",
-	RemoveTextAfterFocusLost = true,
-	Callback = function(username)
-		local Players = game:GetService("Players")
-		local Target = Players:FindFirstChild(username)
-		if Target then
-			Target:Kick("You were kicked from the game.")
-		end
-	end
-})
+createSlider(mainFrame, "Aimlock Smoothness", UDim2.new(0, 50, 0, 200), 0, 100, 20, function(Value)
+    -- placeholder for Aimlock Smoothness slider logic
+end)
 
--- MISC ADDITIONAL FEATURES
-CreateSetting(MainTab, "Bullet Teleportation", "Instantly hits selected hitbox", function(Value) end)
-MainTab:CreateDropdown({
-	Name = "Teleport Hitbox",
-	Options = {"Head", "Torso", "Limbs"},
-	CurrentOption = "Head",
-	Callback = function(Value) end,
-})
-CreateSetting(MainTab, "Anti-Kick / Kick Bypass", "Bypass kick detection", function(Value) end)
-CreateSetting(MainTab, "Desync Movement", "Fake player position", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Desync Strength",
-	Range = {1, 10},
-	Increment = 0.1,
-	CurrentValue = 2,
-	Callback = function(Value) end,
-})
-CreateSetting(MainTab, "Auto Dodge", "Auto move away from aim", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Dodge Cooldown (ms)",
-	Range = {50, 1000},
-	Increment = 10,
-	CurrentValue = 300,
-	Callback = function(Value) end,
-})
-MainTab:CreateDropdown({
-	Name = "Target Priority",
-	Options = {"Closest", "Lowest Health", "Most Kills"},
-	CurrentOption = "Closest",
-	Callback = function(Value) end
-})
-CreateSetting(MainTab, "Player Alert", "Warns you when targeted", function(Value) end)
-MainTab:CreateDropdown({
-	Name = "Alert Method",
-	Options = {"Sound", "Visual"},
-	CurrentOption = "Visual",
-	Callback = function(Value) end
-})
-CreateSetting(MainTab, "Rapid Fire", "Increases fire rate", function(Value) end)
-MainTab:CreateSlider({
-	Name = "Rounds/sec",
-	Range = {1, 1000},
-	Increment = 10,
-	CurrentValue = 300,
-	Callback = function(Value) end,
-})
-CreateSetting(MainTab, "Remove Weapon Cooldown", "Removes weapon delay", function(Value) end)
-CreateSetting(MainTab, "Custom Hit Sound", "Sound on hit", function(Value) end)
-MainTab:CreateInput({
-	Name = "Sound ID",
-	PlaceholderText = "rbxassetid://...",
-	RemoveTextAfterFocusLost = true,
-	Callback = function(Value) end
-})
-CreateSetting(MainTab, "Name ESP Enhancer", "Show distance, health, team", function(Value) end)
+createInput(mainFrame, "Aimlock Keybind", UDim2.new(0, 50, 0, 250), "Press Key...", function(Key)
+    -- placeholder for Aimlock Keybind input logic
+end)
 
--- TAB KEY UI TOGGLE
+-- Other features go here following similar methods...
+
+-- Toggle UI with TAB key
 local UIS = game:GetService("UserInputService")
-UIS.InputBegan:Connect(function(input, gpe)
-	if not gpe and input.KeyCode == Enum.KeyCode.Tab then
-		Rayfield:Toggle()
-	end
+UIS.InputBegan:Connect(function(input, gameProcessedEvent)
+    if not gameProcessedEvent and input.KeyCode == Enum.KeyCode.Tab then
+        if screenGui.Enabled then
+            screenGui.Enabled = false
+        else
+            screenGui.Enabled = true
+        end
+    end
 end)
+
+-- Set the UI to be enabled initially
+screenGui.Enabled = true
